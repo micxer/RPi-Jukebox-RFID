@@ -63,8 +63,8 @@ class TwoButtonControl:
                  hold_mode=None,
                  hold_time=0.3,
                  bouncetime=500,
-                 antibouncehack=False, 
-                 edge='falling', 
+                 antibouncehack=False,
+                 edge='falling',
                  name='TwoButtonControl'):
         self.bcmPin1 = bcmPin1
         self.bcmPin2 = bcmPin2
@@ -75,7 +75,7 @@ class TwoButtonControl:
         self.hold_mode=hold_mode
         self.hold_time=hold_time
         self.bouncetime=bouncetime
-        self.antibouncehack=antibouncehack 
+        self.antibouncehack=antibouncehack
         self.edge=edge
         self.btn1 = SimpleButton(
             pin=bcmPin1,
@@ -85,25 +85,30 @@ class TwoButtonControl:
             edge=edge,
             hold_time=hold_time,
             hold_mode=hold_mode,
-            pull_up_down=pull_up_down)
+            pull_up_down=pull_up_down
+        )
         self.btn1.callback_with_pin_argument = True
 
-        self.btn2 = SimpleButton(pin=bcmPin2,
-                                 name=name + 'Btn2',
-                                 bouncetime=bouncetime,
-                                 antibouncehack=antibouncehack,
-                                 edge=edge,
-                                 hold_time=hold_time,
-                                 hold_mode=hold_mode,
-                                 pull_up_down=pull_up_down)
+        self.btn2 = SimpleButton(
+            pin=bcmPin2,
+            name=name + 'Btn2',
+            bouncetime=bouncetime,
+            antibouncehack=antibouncehack,
+            edge=edge,
+            hold_time=hold_time,
+            hold_mode=hold_mode,
+            pull_up_down=pull_up_down
+        )
         self.btn2.callback_with_pin_argument = True
-        generatedTwoButtonFunctionCall = functionCallTwoButtons(self.btn1,
-                                                                self.btn2,
-                                                                self.functionCallBtn1,
-                                                                self.functionCallBtn2,
-                                                                self.functionCallTwoBtns
-                                                                )
+        generatedTwoButtonFunctionCall = functionCallTwoButtons(
+            self.btn1,
+            self.btn2,
+            self.functionCallBtn1,
+            self.functionCallBtn2,
+            self.functionCallTwoBtns
+        )
         self.action = generatedTwoButtonFunctionCall
+
         logger.info('adding new action')
         self.btn1.when_pressed = generatedTwoButtonFunctionCall
         self.btn2.when_pressed = generatedTwoButtonFunctionCall
