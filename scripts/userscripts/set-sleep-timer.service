@@ -1,5 +1,12 @@
 [Unit]
-Description=Set sleep timer with volume reduction
+Description=Phoniebox - Set sleep timer with volume reduction
+After=network.target iptables.service firewalld.service
 
 [Service]
+
+Type=simple
+User=pi
+Group=pi
+WorkingDirectory=/home/pi/RPi-Jukebox-RFID/scripts/userscripts
 ExecStart=/home/pi/RPi-Jukebox-RFID/scripts/userscripts/set-sleep-timer.sh
+SyslogIdentifier=PhonieboxSetAutomaticSleepTimer
