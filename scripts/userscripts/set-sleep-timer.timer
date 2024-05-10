@@ -1,0 +1,9 @@
+[Unit]
+Description=Runs set-sleep-timer.sh every 5 minutes between 19:00 and 6:00
+
+[Timer]
+OnCalendar=*-*-* 19..23,00..06:0/5
+Persistent=true
+
+[Install]
+WantedBy=timers.target
