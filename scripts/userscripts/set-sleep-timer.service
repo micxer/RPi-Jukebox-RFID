@@ -1,0 +1,5 @@
+[Unit]
+Description=Set sleep timer with volume reduction
+
+[Service]
+ExecStart=/home/pi/RPi-Jukebox-RFID/scripts/userscripts/set-sleep-timer.sh
