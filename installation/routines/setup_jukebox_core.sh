@@ -48,10 +48,57 @@ _jukebox_core_install_python_requirements() {
   fi
 }
 
-_jukebox_core_check_zmq() {
-    log "  Verify standard ZMQ TCP and inproc transports"
-    if ! python "${INSTALLATION_PATH}/ci/installation/zmq_smoke.py"; then
-        exit_on_error "ERROR: Standard ZMQ transport smoke test failed!"
+_jukebox_core_configure_pulseaudio() {
+  print_lc "  Copy PulseAudio configuration"
+  mkdir -p $(dirname "$JUKEBOX_PULSE_CONFIG")
+  # Use install command to copy with correct permissions, respecting umask
+  install -m 644 "${INSTALLATION_PATH}/resources/default-settings/pulseaudio.default.pa" "${JUKEBOX_PULSE_CONFIG}"
+}
+
+_jukebox_core_build_libzmq_with_drafts() {
+  print_lc "    Building libzmq v${JUKEBOX_ZMQ_VERSION} with drafts support"
+  local zmq_filename="zeromq-${JUKEBOX_ZMQ_VERSION}"
+  local zmq_tar_filename="${zmq_filename}.tar.gz"
+  local cpu_count=${CPU_COUNT:-$(python3 -c "import os; print(os.cpu_count())")}
+
+  cd "${JUKEBOX_ZMQ_TMP_DIR}" || exit_on_error
+  wget --quiet https://github.com/zeromq/libzmq/releases/download/v${JUKEBOX_ZMQ_VERSION}/${zmq_tar_filename} || exit_on_error "Download failed"
+  tar -xzf ${zmq_tar_filename}
+  rm -f ${zmq_tar_filename}
+  cd ${zmq_filename} || exit_on_error
+  ./configure --prefix=${JUKEBOX_ZMQ_PREFIX} --enable-drafts --disable-Werror
+  make -j${cpu_count} && sudo make install
+}
+
+_jukebox_core_download_prebuilt_libzmq_with_drafts() {
+  log "    Download pre-compiled libzmq with drafts support"
+  local zmq_tar_filename="libzmq.tar.gz"
+  ARCH=$(get_architecture)
+
+  cd "${JUKEBOX_ZMQ_TMP_DIR}" || exit_on_error
+  wget --quiet https://github.com/pabera/libzmq/releases/download/v${JUKEBOX_ZMQ_VERSION}/libzmq5-${ARCH}-${JUKEBOX_ZMQ_VERSION}.tar.gz -O ${zmq_tar_filename} || exit_on_error "Download failed"
+  tar -xzf ${zmq_tar_filename}
+  rm -f ${zmq_tar_filename}
+  sudo rsync -a ./* ${JUKEBOX_ZMQ_PREFIX}/
+}
+
+_jukebox_core_build_and_install_pyzmq() {
+  # ZMQ
+  # Because the latest stable release of ZMQ does not support WebSockets
+  # we need to compile the latest version in Github
+  # As soon WebSockets support is stable in ZMQ, this can be removed
+  # Sources:
+  # https://pyzmq.readthedocs.io/en/latest/howto/draft.html
+  # https://github.com/MonsieurV/ZeroMQ-RPi/blob/master/README.md
+  # https://github.com/zeromq/pyzmq/issues/1523#issuecomment-1593120264
+  print_lc "  Install pyzmq with libzmq-drafts to support WebSockets"
+
+  if ! pip list | grep -F pyzmq >> /dev/null; then
+    mkdir -p "${JUKEBOX_ZMQ_TMP_DIR}" || exit_on_error
+    if [ "$BUILD_LIBZMQ_WITH_DRAFTS_ON_DEVICE" = true ] ; then
+      _jukebox_core_build_libzmq_with_drafts
+    else
+      _jukebox_core_download_prebuilt_libzmq_with_drafts
     fi
     log "  CHECK"
 }
