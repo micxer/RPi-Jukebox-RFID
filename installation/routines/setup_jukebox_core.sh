@@ -34,14 +34,18 @@ _jukebox_core_install_python_requirements() {
   # prepare lgpio build for bullseye as the binaries are broken
   local pip_install_options=""
   if [ "$(is_debian_version_at_least 12)" = false ]; then
+    # Debian 11 and earlier: always build lgpio C library from source
     _jukebox_core_build_and_install_lgpio
     pip_install_options="--no-binary=lgpio"
-  else
-    # For Debian 12+, install swig in case pip needs to build lgpio from source as fallback
-    sudo apt-get -y install swig python3-dev python3-setuptools
   fi
 
-  pip install --no-cache-dir -r "${INSTALLATION_PATH}/requirements.txt" ${pip_install_options}
+  # Try to install requirements. If it fails (e.g., no wheel for current Python version),
+  # build lgpio C library from source and retry
+  if ! pip install --no-cache-dir -r "${INSTALLATION_PATH}/requirements.txt" ${pip_install_options}; then
+    log "  pip install failed, attempting to build lgpio from source"
+    _jukebox_core_build_and_install_lgpio
+    pip install --no-cache-dir -r "${INSTALLATION_PATH}/requirements.txt" --no-binary=lgpio
+  fi
 }
 
 _jukebox_core_check_zmq() {
