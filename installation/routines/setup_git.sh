@@ -53,6 +53,16 @@ _git_convert_tardir_git_repo() {
   git -c init.defaultBranch=main init
   git config pull.rebase false
 
+  # Ensure .git directory has correct permissions (755)
+  chmod 755 .git
+
+  # We always add origin as the selected (possible) user repository
+  # and, if relevant, MiczFlor's repository as upstream
+  # This means for developers everything is fully set up.
+  # For users there is no difference there is only origin = MiczFlor
+  # We need to get the branch with larger depth, as we do not know
+  # how many commits happened between download and git repo init
+  # We simply get everything from the beginning of future 3 development but excluding Version 2.X
   if [[ $GIT_USE_SSH == true ]]; then
     git remote add origin "git@github.com:${GIT_USER}/${GIT_REPO_NAME}.git"
     log "\n*** Git fetch (SSH) *******************************"
