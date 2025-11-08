@@ -10,6 +10,9 @@
 #
 export LC_ALL=C
 
+# Set umask to ensure consistent file permissions (644 for files, 755 for directories)
+umask 022
+
 # Set Repo variables if not specified when calling the script
 GIT_USER=${GIT_USER:-"MiczFlor"}
 GIT_BRANCH=${GIT_BRANCH:-"future3/main"}

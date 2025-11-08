@@ -53,9 +53,6 @@ _git_convert_tardir_git_repo() {
   git -c init.defaultBranch=main init
   git config pull.rebase false
 
-  # Ensure .git directory has correct permissions (755)
-  chmod 755 .git
-
   # We always add origin as the selected (possible) user repository
   # and, if relevant, MiczFlor's repository as upstream
   # This means for developers everything is fully set up.
