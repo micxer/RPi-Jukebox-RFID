@@ -51,8 +51,8 @@ _jukebox_core_install_python_requirements() {
 _jukebox_core_configure_pulseaudio() {
   print_lc "  Copy PulseAudio configuration"
   mkdir -p $(dirname "$JUKEBOX_PULSE_CONFIG")
-  # Use install command to copy with correct permissions, respecting umask
-  install -m 644 "${INSTALLATION_PATH}/resources/default-settings/pulseaudio.default.pa" "${JUKEBOX_PULSE_CONFIG}"
+  cp -f "${INSTALLATION_PATH}/resources/default-settings/pulseaudio.default.pa" "${JUKEBOX_PULSE_CONFIG}"
+  chmod 644 "${JUKEBOX_PULSE_CONFIG}"
 }
 
 _jukebox_core_build_libzmq_with_drafts() {
