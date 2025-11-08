@@ -476,7 +476,8 @@ verify_pip_modules() {
         exit_on_error "ERROR: at least one parameter value is missing!"
     fi
 
-    local pip_list_installed=$(pip list 2>/dev/null)
+    # Use python -m pip to ensure we're using the correct pip (from venv if active)
+    local pip_list_installed=$(python -m pip list 2>/dev/null)
     for module in ${modules}
     do
         if [[ ! $(echo "${pip_list_installed}" | grep -i "^${module} ") ]]; then
@@ -495,7 +496,8 @@ verify_pip_modules_not() {
         exit_on_error "ERROR: at least one parameter value is missing!"
     fi
 
-    local pip_list_installed=$(pip list 2>/dev/null)
+    # Use python -m pip to ensure we're using the correct pip (from venv if active)
+    local pip_list_installed=$(python -m pip list 2>/dev/null)
     for module in ${modules}
     do
         if [[ $(echo "${pip_list_installed}" | grep -i "^${module} ") ]]; then
