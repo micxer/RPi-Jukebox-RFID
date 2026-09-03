@@ -11,24 +11,9 @@ Sleep Timer Set Form
         /*
         * Get shutdownvolumereduction value
         */
-        $shutdownvolumereductionvalue = exec("sudo atq -q q | awk '{print $5}'");
-        if ($shutdownvolumereductionvalue != "") {
-            $unixtime = time();
-            /*
-            * For the night owls: if the shutdown time is after midnight (and so on the next day), 
-            * $shutdowntime is something like 00:30:00 and time() is e.g. 23:45:00.
-            * strtotime($shutdowntime) returns the unix time for today and we get a negative 
-            * value in the calculation below.
-            * This is fixed by subtracting a day from the current time, as we only need the difference.
-            */
-            if ($unixtime > strtotime($shutdownvolumereductionvalue)) {
-                $unixtime = $unixtime - 86400;
-            }
-            $remainingshutdownvolumereduction = (strtotime($shutdownvolumereductionvalue)-$unixtime)/60;
-            if($remainingshutdownvolumereduction > 60) {
-                $remainingshutdownvolumereduction = 60;
-            }
-            $remainingshutdownvolumereductionselect = round($remainingshutdownvolumereduction);
+        $shutdownvolreduction_epoch = exec("sudo atq -q q 2>/dev/null | awk 'NR==1{print \$3,\$4,\$5,\$6}' | xargs -r -I{} date -d '{}' +%s");
+        if ($shutdownvolreduction_epoch != "") {
+            $remainingshutdownvolumereductionselect = round(($shutdownvolreduction_epoch - time()) / 60);
         }
         else {
             $remainingshutdownvolumereductionselect = 0;
@@ -47,6 +32,9 @@ Sleep Timer Set Form
                     foreach($shutdownvolumereductionvals as $i) {
                         print "
                         <option value='".$i."'";
+                        if($remainingshutdownvolumereductionselect == $i) {
+                            print " selected";
+                        }
                         print ">".$i."min</option>";
                     }
                     print "\n";
@@ -60,12 +48,12 @@ Sleep Timer Set Form
               </div>
               
               <div class="col-xs-6">
-                  <div class="orange c100 p<?php print round($remainingshutdownvolumereductionselect*100/60); ?>">
-                    <span><?php 
+                  <div class="orange c100 p<?php print round(min($remainingshutdownvolumereductionselect, 60)*100/60); ?>">
+                    <span><?php
                         if($remainingshutdownvolumereductionselect == 0) {
                             print $lang['globalOff'];
                         } else {
-                            print $remainingshutdownvolumereductionselect."min"; 
+                            print $remainingshutdownvolumereductionselect."min";
                         }
                     ?></span>
                     <div class="slice">

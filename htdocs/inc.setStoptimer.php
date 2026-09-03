@@ -11,24 +11,9 @@ Stop Playout Timer Set Form
         /*
         * Get sleeptimer value
         */
-        $stoptimervalue = exec("sudo atq -q s | awk '{print $5}'");
-        if ($stoptimervalue != "") {
-            $unixtime = time();
-            /*
-            * For the night owls: if the playout stop time is after midnight (and so on the next day), 
-            * $stoptimervalue is something like 00:30:00 and time() is e.g. 23:45:00.
-            * strtotime($stoptimervalue) returns the unix time for today and we get a negative 
-            * value in the calculation below.
-            * This is fixed by subtracting a day from the current time, as we only need the difference.
-            */
-            if ($unixtime > strtotime($stoptimervalue)) {
-                $unixtime = $unixtime - 86400;
-            }
-            $remainingstoptimer = (strtotime($stoptimervalue)-$unixtime)/60;
-            if($remainingstoptimer > 60) {
-                $remainingstoptimer = 60;
-            }
-            $remainingstoptimerselect = round($remainingstoptimer);
+        $stoptimer_epoch = exec("sudo atq -q s 2>/dev/null | awk 'NR==1{print \$3,\$4,\$5,\$6}' | xargs -r -I{} date -d '{}' +%s");
+        if ($stoptimer_epoch != "") {
+            $remainingstoptimerselect = round(($stoptimer_epoch - time()) / 60);
         }
         else {
             $remainingstoptimerselect = 0;
@@ -47,6 +32,9 @@ Stop Playout Timer Set Form
                     foreach($stoptimervals as $i) {
                         print "
                         <option value='".$i."'";
+                        if($remainingstoptimerselect == $i) {
+                            print " selected";
+                        }
                         print ">".$i."min</option>";
                     }
                     print "\n";
@@ -60,12 +48,12 @@ Stop Playout Timer Set Form
               </div>
               
               <div class="col-xs-6">
-                  <div class="orange c100 p<?php print round($remainingstoptimerselect*100/60); ?>">
-                    <span><?php 
+                  <div class="orange c100 p<?php print round(min($remainingstoptimerselect, 60)*100/60); ?>">
+                    <span><?php
                         if($remainingstoptimerselect == 0) {
                             print $lang['globalOff'];
                         } else {
-                            print $remainingstoptimerselect."min"; 
+                            print $remainingstoptimerselect."min";
                         }
                     ?></span>
                     <div class="slice">

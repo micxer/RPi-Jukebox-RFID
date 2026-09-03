@@ -11,24 +11,9 @@ Sleep Timer Set Form
         /*
         * Get sleeptimer value
         */
-        $sleeptimervalue = exec("sudo atq -q t | awk '{print $5}'");
-        if ($sleeptimervalue != "") {
-            $unixtime = time();
-            /*
-            * For the night owls: if the shutdown time is after midnight (and so on the next day), 
-            * $shutdowntime is something like 00:30:00 and time() is e.g. 23:45:00.
-            * strtotime($shutdowntime) returns the unix time for today and we get a negative 
-            * value in the calculation below.
-            * This is fixed by subtracting a day from the current time, as we only need the difference.
-            */
-            if ($unixtime > strtotime($sleeptimervalue)) {
-                $unixtime = $unixtime - 86400;
-            }
-            $remainingsleeptimer = (strtotime($sleeptimervalue)-$unixtime)/60;
-            if($remainingsleeptimer > 60) {
-                $remainingsleeptimer = 60;
-            }
-            $remainingsleeptimerselect = round($remainingsleeptimer);
+        $sleeptimer_epoch = exec("sudo atq -q t 2>/dev/null | awk 'NR==1{print \$3,\$4,\$5,\$6}' | xargs -r -I{} date -d '{}' +%s");
+        if ($sleeptimer_epoch != "") {
+            $remainingsleeptimerselect = round(($sleeptimer_epoch - time()) / 60);
         }
         else {
             $remainingsleeptimerselect = 0;
@@ -47,6 +32,9 @@ Sleep Timer Set Form
                     foreach($sleeptimervals as $i) {
                         print "
                         <option value='".$i."'";
+                        if($remainingsleeptimerselect == $i) {
+                            print " selected";
+                        }
                         print ">".$i."min</option>";
                     }
                     print "\n";
@@ -60,12 +48,12 @@ Sleep Timer Set Form
               </div>
               
               <div class="col-xs-6">
-                  <div class="orange c100 p<?php print round($remainingsleeptimerselect*100/60); ?>">
-                    <span><?php 
+                  <div class="orange c100 p<?php print round(min($remainingsleeptimerselect, 60)*100/60); ?>">
+                    <span><?php
                         if($remainingsleeptimerselect == 0) {
                             print $lang['globalOff'];
                         } else {
-                            print $remainingsleeptimerselect."min"; 
+                            print $remainingsleeptimerselect."min";
                         }
                     ?></span>
                     <div class="slice">
